@@ -55,6 +55,18 @@ export default function BroadcastApp() {
   const [broadcastName, setBroadcastName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
 
+  /* ---------------- SCOREBOARD STATE ---------------- */
+  const SPORTS = ['Basketball', 'Tennis', 'Badminton', 'Swimming'];
+  const CATEGORIES = ['Men', 'Women', 'Mixed'];
+
+  const [sport, setSport] = useState('');
+  const [category, setCategory] = useState('');
+  const [team1, setTeam1] = useState('');
+  const [team2, setTeam2] = useState('');
+  const [score1, setScore1] = useState(0);
+  const [score2, setScore2] = useState(0);
+
+  /* ---------------- CREATE CHANNEL ---------------- */
   const handleCreateChannel = async () => {
     if (!broadcastName) return;
     setIsCreating(true);
@@ -81,6 +93,7 @@ export default function BroadcastApp() {
     }
   };
 
+  /* ---------------- INIT BROADCAST ---------------- */
   useEffect(() => {
     if (sdkIsStarting.current) return;
     sdkIsStarting.current = true;
@@ -94,21 +107,21 @@ export default function BroadcastApp() {
               const { width, height } = videoStream
                 .getTracks()[0]
                 .getSettings();
-              refreshSceneRef.current = refreshCurrentScene;
-              showFullScreenCam({
-                cameraStream: enableCanvasCamera
-                  ? canvasElemRef.current
-                  : videoStream,
-                cameraId: videoDeviceId,
-                cameraIsCanvas: enableCanvasCamera,
-                micStream: audioStream,
-                micId: audioDeviceId,
-                showMuteIcon: false,
-              });
+            refreshSceneRef.current = refreshCurrentScene;
+            showFullScreenCam({
+              cameraStream: enableCanvasCamera
+                ? canvasElemRef.current
+                : videoStream,
+              cameraId: videoDeviceId,
+              cameraIsCanvas: enableCanvasCamera,
+              micStream: audioStream,
+              micId: audioDeviceId,
+              showMuteIcon: false,
+            });
             })
             .catch((err) => {
               console.error(err);
-            });
+          });
         }
       }
     );
@@ -185,24 +198,27 @@ export default function BroadcastApp() {
           );
         },
         {
-          id: 'BROWSER_SUPPORT',
-          duration: Infinity,
-        }
-      );
+        id: 'BROWSER_SUPPORT',
+        duration: Infinity,
+      });
     }
   }, [isSupported]);
 
-  const title = `Amazon IVS – Web Broadcast Tool - ${isLive ? 'LIVE' : 'Offline'
-    }`;
+  const title = `Amazon IVS – Web Broadcast Tool - ${
+    isLive ? 'LIVE' : 'Offline'
+  }`;
 
   return (
     <>
       <Head>
         <title>{title}</title>
       </Head>
-      <div className='flex flex-col h-[100dvh] items-center bg-surface'>
-        <div className="w-full p-4 bg-surface flex gap-2 justify-between items-center z-10 border-b border-gray-700">
-          <div className="flex gap-2 items-center">
+
+      <div className="flex flex-col h-[100dvh] bg-surface">
+
+        {/* TOP BAR */}
+        <div className="w-full p-4 flex justify-between items-center border-b border-gray-700">
+          <div className="flex gap-2">
             <input
               type="text"
               placeholder="Enter Broadcast Name"
@@ -213,15 +229,18 @@ export default function BroadcastApp() {
             <button
               onClick={handleCreateChannel}
               disabled={isCreating || !broadcastName}
-              className="bg-primary text-white px-4 py-2 rounded disabled:opacity-50 font-bold hover:bg-primaryAlt transition-colors"
+              className="bg-primary text-white px-4 py-2 rounded font-bold disabled:opacity-50"
             >
               {isCreating ? 'Creating...' : 'Create Channel'}
             </button>
           </div>
+
           <div className="flex items-center gap-3">
-            <span className="text-sm text-nyu-neutral-600">Welcome, {user?.username}</span>
-            <Button 
-              type="secondary" 
+            <span className="text-sm text-gray-400">
+              Welcome, {user?.username}
+            </span>
+            <Button
+              type="secondary"
               onClick={async () => {
                 await logout();
                 router.push('/');
@@ -231,10 +250,95 @@ export default function BroadcastApp() {
             </Button>
           </div>
         </div>
+
         <ToasterBar />
         <StatusBar />
-        <StreamPreview previewRef={previewRef} />
+
+        {/* SMALLER STREAM PREVIEW */}
+        <div className="w-full max-w-4xl mx-auto mt-4 aspect-video">
+          <StreamPreview previewRef={previewRef} />
+        </div>
+
         <ControlBar />
+
+        {/* SCOREBOARD PANEL */}
+        <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+
+          <div className="flex gap-4">
+            <select
+              value={sport}
+              onChange={(e) => setSport(e.target.value)}
+              className="p-2 rounded text-black w-1/2"
+            >
+              <option value="">Select Sport</option>
+              {SPORTS.map((s) => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+
+            <select
+              value={category}
+              onChange={(e) => setCategory(e.target.value)}
+              className="p-2 rounded text-black w-1/2"
+            >
+              <option value="">Select Category</option>
+              {CATEGORIES.map((c) => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-6">
+
+            {/* TEAM 1 */}
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                placeholder="Enter Team 1 Name"
+                value={team1}
+                onChange={(e) => setTeam1(e.target.value)}
+                className="p-2 rounded text-black"
+              />
+
+
+              <div className="flex items-center gap-2">
+                <button onClick={() => setScore1(Math.max(0, score1 - 1))}>−</button>
+                <input
+                  type="number"
+                  value={score1}
+                  onChange={(e) => setScore1(Number(e.target.value))}
+                  className="w-16 text-center text-black rounded"
+                />
+                <button onClick={() => setScore1(score1 + 1)}>+</button>
+              </div>
+            </div>
+
+            {/* TEAM 2 */}
+            <div className="flex flex-col gap-2">
+              <input
+                type="text"
+                placeholder="Enter Team 2 Name"
+                value={team2}
+                onChange={(e) => setTeam2(e.target.value)}
+                className="p-2 rounded text-black"
+              />
+
+
+              <div className="flex items-center gap-2">
+                <button onClick={() => setScore2(Math.max(0, score2 - 1))}>−</button>
+                <input
+                  type="number"
+                  value={score2}
+                  onChange={(e) => setScore2(Number(e.target.value))}
+                  className="w-16 text-center text-black rounded"
+                />
+                <button onClick={() => setScore2(score2 + 1)}>+</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
         {enableCanvasCamera && (
           <CameraCanvas
             width={canvasWidth}
@@ -243,6 +347,7 @@ export default function BroadcastApp() {
           />
         )}
       </div>
+
       <Modal show={modalActive} onClose={toggleModal} {...modalProps}>
         {modalContent}
       </Modal>
