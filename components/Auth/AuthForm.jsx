@@ -150,6 +150,7 @@ export default function AuthForm({ mode = 'login', onSwitchMode, onSuccess }) {
                 >
                 <option value="viewer">Viewer</option>
                 <option value="broadcaster">Broadcaster</option>
+                <option value="admin">Admin</option>
                 </select>
             </div>
             </>

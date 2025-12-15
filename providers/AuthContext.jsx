@@ -19,22 +19,20 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     checkAuthState();
 
-    // Listen for storage changes (when user logs in/out in another tab)
     const handleStorageChange = async (e) => {
-      if (e.key === 'CognitoIdentityServiceProvider' || e.key?.includes('CognitoIdentityServiceProvider')) {
-        // Auth state changed in another tab, recheck
+      if (
+        e.key === 'CognitoIdentityServiceProvider' ||
+        e.key?.includes('CognitoIdentityServiceProvider')
+      ) {
         await checkAuthState();
       }
     };
 
-    window.addEventListener('storage', handleStorageChange);
-
-    // Also listen for focus events to sync when switching windows
     const handleFocus = () => {
       checkAuthState();
     };
 
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener('storage', handleStorageChange);
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
@@ -46,26 +44,26 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const currentUser = await getCurrentUser();
-      setUser({ username: currentUser.username });
 
-      // Try to get user attributes to determine user type
+      let resolvedUserType = null;
+
       try {
         const attributes = await fetchUserAttributes();
-        const userTypeFromAttr = attributes['custom:userType'] || null;
-        setUserType(userTypeFromAttr);
-      } catch (attrError) {
-        // Fallback to checking token if fetchUserAttributes fails
+        resolvedUserType = attributes['custom:userType'] || null;
+      } catch {
         try {
           const session = await fetchAuthSession();
-          const token = session.tokens?.idToken;
-          if (token?.payload) {
-            const userTypeFromToken = token.payload['custom:userType'] || null;
-            setUserType(userTypeFromToken);
-          }
-        } catch (tokenError) {
-          console.warn('Could not fetch user type:', tokenError);
+          resolvedUserType =
+            session.tokens?.idToken?.payload?.['custom:userType'] || null;
+        } catch (e) {
+          console.warn('Could not resolve user type', e);
         }
       }
+
+      setUser({
+        username: currentUser.username,
+      });
+      setUserType(resolvedUserType);
     } catch {
       setUser(null);
       setUserType(null);
@@ -74,19 +72,45 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  /**
+   * LOGIN with safe retry if user is already signed in
+   */
   const login = async (username, password) => {
     setError(null);
+
     try {
-      const { isSignedIn } = await signIn({ username, password });
-      if (isSignedIn) {
+      const result = await signIn({ username, password });
+
+      if (result.isSignedIn) {
         await checkAuthState();
         return { success: true };
       }
+
       return { success: false, error: 'Sign in incomplete' };
     } catch (err) {
-      const errorMessage = err.message || 'Failed to sign in';
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      const message = err?.message || '';
+
+      // ✅ Handle "already signed in" edge case
+      if (message.includes('already signed in')) {
+        try {
+          console.warn('Stale Cognito session detected. Resetting...');
+          await signOut({ global: false });
+
+          const retry = await signIn({ username, password });
+          if (retry.isSignedIn) {
+            await checkAuthState();
+            return { success: true };
+          }
+        } catch (retryErr) {
+          const retryMessage =
+            retryErr?.message || 'Failed to sign in after retry';
+          setError(retryMessage);
+          return { success: false, error: retryMessage };
+        }
+      }
+
+      setError(message || 'Failed to sign in');
+      return { success: false, error: message };
     }
   };
 
@@ -103,13 +127,15 @@ export const AuthProvider = ({ children }) => {
           },
         },
       });
-      return { 
-        success: true, 
-        userId, 
+
+      return {
+        success: true,
+        userId,
         nextStep,
-        message: nextStep?.signUpStep === 'CONFIRM_SIGN_UP' 
-          ? 'Check your email for verification.' 
-          : 'Registration successful'
+        message:
+          nextStep?.signUpStep === 'CONFIRM_SIGN_UP'
+            ? 'Check your email for verification.'
+            : 'Registration successful',
       };
     } catch (err) {
       const errorMessage = err.message || 'Failed to register';
@@ -121,7 +147,7 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     setError(null);
     try {
-      await signOut();
+      await signOut({ global: false });
       setUser(null);
       setUserType(null);
       return { success: true };
@@ -146,6 +172,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated: !!user,
         isViewer: userType === 'viewer',
         isBroadcaster: userType === 'broadcaster',
+        isAdmin: userType === 'admin',
       }}
     >
       {children}

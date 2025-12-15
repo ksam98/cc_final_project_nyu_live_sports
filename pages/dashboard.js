@@ -6,6 +6,12 @@ import { useAuth } from '@/providers/AuthContext';
 import Link from 'next/link';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
+import DashboardTabs from '@/components/dashboard/DashboardTabs';
+import StreamCard from '@/components/dashboard/StreamCard';
+import CategoryCard from '@/components/dashboard/CategoryCard';
+import ScheduleRow from '@/components/dashboard/ScheduleRow';
+import AddScheduleModal from '@/components/dashboard/AddScheduleModal';
+
 
 function SkeletonCard() {
   return (
@@ -23,10 +29,23 @@ export default function Dashboard() {
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(false); // fetch state
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('Live');
+  const [favorites, setFavorites] = useState([]);
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
 
-  const { isAuthenticated, loading: authLoading, user, logout, isViewer } = useAuth();
+  const schedule = [
+    {
+      teams: 'NYU vs Columbia',
+      time: 'Dec 15 • 5:00 PM',
+      location: 'NYU Arena',
+      sport: 'Basketball',
+    },
+  ];
+  const sports = ['Basketball', 'Throwball', 'Volleyball', 'Swimming', 'Running'];
+  const { isAuthenticated, loading: authLoading, user, logout, isViewer, isAdmin } = useAuth();
   const router = useRouter();
-
+  
+  const didFetch = useRef(false);
   // guard concurrent fetches
   const fetchInProgress = useRef(false);
   // hold AbortController to cancel on unmount / new fetch
@@ -77,27 +96,30 @@ export default function Dashboard() {
 
   // Redirect logic + initial fetch control
   useEffect(() => {
-    // Wait until Auth finished loading
     if (authLoading) return;
 
     // Not authenticated → home
     if (!isAuthenticated) {
-      if (router.pathname !== '/') router.replace('/');
+      router.replace('/');
       return;
     }
 
-    // Authenticated but not a viewer → broadcast page
-    if (!isViewer) {
-      if (router.pathname !== '/broadcast') router.replace('/broadcast');
+    // ONLY broadcasters go to broadcast
+    if (user?.role === 'broadcaster') {
+      router.replace('/broadcast');
       return;
     }
 
-    // Authenticated viewer on the dashboard route: fetch channels once
-    if (router.pathname === '/dashboard') {
+    // viewers + admins stay on dashboard
+    
+
+    if (router.pathname === '/dashboard' && !didFetch.current) {
+      didFetch.current = true;
       fetchChannels();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [authLoading, isAuthenticated, isViewer, router.pathname, fetchChannels]);
+
+  }, [authLoading, isAuthenticated, user?.role, router.pathname, fetchChannels]);
+
 
   // Cleanup AbortController on unmount
   useEffect(() => {
@@ -202,27 +224,132 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="mb-6">
-            <h2 className="text-3xl font-bold text-nyu-primary-600 mb-2">Live Streams</h2>
-            <p className="text-nyu-neutral-600">Select a stream to start watching</p>
-          </div>
+          <DashboardTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          {error && (
-            <div className="mb-6 p-4 rounded-lg bg-red-50 border border-red-200">
-              <p className="text-sm text-red-600">{error}</p>
+          {activeTab === 'Live' && (
+
+              <div className="space-y-6">
+                {/* Intro text */}
+                <p className="text-nyu-neutral-600">
+                  Select a stream to start watching
+                </p>
+
+                {/* Error */}
+                {error && (
+                  <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                    <p className="text-sm text-red-600">{error}</p>
+                  </div>
+                )}
+
+                {/* Empty state */}
+                {channels.length === 0 ? (
+                  <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-nyu-neutral-300">
+                    <p className="text-lg text-nyu-neutral-600 mb-2">
+                      No live streams available
+                    </p>
+                    <p className="text-sm text-nyu-neutral-400">
+                      Check back later for live sports events
+                    </p>
+                  </div>
+                ) : (
+                  /* Cards grid */
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {channelCards}
+                  </div>
+                )}
+              </div>
+
+          )}
+
+          {activeTab === 'Categories' && (
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+              {sports.map((sport) => (
+                <CategoryCard
+                  key={sport}
+                  sport={sport}
+                  isFavorite={favorites.includes(sport)}
+                  onToggle={() =>
+                    setFavorites((prev) =>
+                      prev.includes(sport)
+                        ? prev.filter((f) => f !== sport)
+                        : [...prev, sport]
+                    )
+                  }
+                />
+              ))}
             </div>
           )}
 
-          {channels.length === 0 ? (
-            <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-nyu-neutral-300">
-              <p className="text-lg text-nyu-neutral-600 mb-2">No live streams available</p>
-              <p className="text-sm text-nyu-neutral-400">Check back later for live sports events</p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {channelCards}
+          {activeTab === 'Schedule' && (
+            <div className="space-y-4">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-nyu-neutral-800">
+                  Upcoming Matches
+                </h2>
+
+                {isAdmin && (
+                  <Button
+                    type="primary"
+                    onClick={() => setIsScheduleModalOpen(true)}
+                  >
+                    + Add Schedule
+                  </Button>
+                )}
+              </div>
+
+              {/* Schedule List */}
+              <div className="bg-white rounded-lg border border-border divide-y">
+                {schedule.length === 0 ? (
+                  <div className="p-6 text-center text-nyu-neutral-500">
+                    No scheduled matches
+                  </div>
+                ) : (
+                  schedule.map((match, i) => (
+                    <ScheduleRow
+                      key={i}
+                      match={match}
+                      isAdmin={isAdmin}
+                      onEdit={() => console.log('Edit', match)}
+                      onDelete={() => console.log('Delete', match)}
+                    />
+                  ))
+                )}
+              </div>
             </div>
           )}
+          
+          {activeTab === 'Favorites' && (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
+              {favorites.map((sport) => (
+                <CategoryCard
+                  key={sport}
+                  sport={sport}
+                  isFavorite
+                  onToggle={() =>
+                    setFavorites((prev) => prev.filter((f) => f !== sport))
+                  }
+                />
+              ))}
+            </div>
+          )}
+          {isAdmin && (
+            <AddScheduleModal
+              isOpen={isScheduleModalOpen}
+              onClose={() => setIsScheduleModalOpen(false)}
+              onSave={(newMatch) => {
+                console.log('New schedule:', newMatch);
+
+                // TEMP: append locally
+                // Later → POST to API + DynamoDB
+                schedule.push({
+                  ...newMatch,
+                  time: new Date(newMatch.dateTime).toLocaleString(),
+                });
+              }}
+            />
+          )}
+
         </main>
       </div>
     </>

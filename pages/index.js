@@ -12,16 +12,17 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!loading && isAuthenticated) {
-      // Redirect based on user type
-      if (userType === 'broadcaster') {
-        router.replace('/broadcast');
-      } else {
-        router.replace('/dashboard');
-      }
+    if (loading) return;
+    if (!isAuthenticated) return;
+    if (!userType) return; // wait until role is known
+
+    if (userType === 'broadcaster') {
+      router.replace('/broadcast');
+    } else {
+      router.replace('/dashboard');
     }
-    // only react to auth changes
-  }, [isAuthenticated, loading, userType, router]);
+  }, [isAuthenticated, loading, userType, router.pathname]);
+
 
   const handleAuthSuccess = () => {
     checkAuthState();
