@@ -7,6 +7,8 @@ from lib.ws_broadcast import broadcast_to_game
 def lambda_handler(event, context):
     game_id = event["pathParameters"]["gameId"]
     body = json.loads(event["body"])
+    if isinstance(body, str):
+        body = json.loads(body)
     status = body["status"]
 
     if status not in ["Started", "Ended"]:
