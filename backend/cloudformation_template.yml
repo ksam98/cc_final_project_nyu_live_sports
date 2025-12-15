@@ -1,0 +1,189 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: NYU Sports Live Lambdas
+
+Parameters:
+  LambdaCodeBucket:
+    Type: String
+  LambdaCodeKey:
+    Type: String
+
+Resources:
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: CF_LambdaPolicy_DynamoDB_ManageConnections
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:*
+                  - execute-api:ManageConnections
+                Resource: "*"
+  
+  CreateGameFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: create-game
+      Runtime: python3.10
+      Handler: handlers.create_game.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  DeleteGameFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: delete-game
+      Runtime: python3.10
+      Handler: handlers.delete_game.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  GetGameByChannelFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: get-game-by-channel
+      Runtime: python3.10
+      Handler: handlers.get_game_by_channel.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+
+  GetGameByIdFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: get-game-by-id
+      Runtime: python3.10
+      Handler: handlers.get_game_by_id.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  IvsStreamEventFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ivs-stream-event
+      Runtime: python3.10
+      Handler: handlers.ivs_stream_event.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  ListLiveGamesFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: list-live-games
+      Runtime: python3.10
+      Handler: handlers.list_live_games.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  UpdateScoreFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: update-score
+      Runtime: python3.10
+      Handler: handlers.update_score.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+
+  UpdateStreamStatusFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: update-stream-status
+      Runtime: python3.10
+      Handler: handlers.update_stream_status.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+  
+  WsDisconnectFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ws-disconnect
+      Runtime: python3.10
+      Handler: handlers.ws_disconnect.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
+          GAMES_TABLE: Games
+          WS_ENDPOINT: https://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production
+
+  WsConnectFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: ws-connect
+      Runtime: python3.10
+      Handler: handlers.ws_connect.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Code:
+        S3Bucket: !Ref LambdaCodeBucket
+        S3Key: !Ref LambdaCodeKey
+      Environment:
+        Variables:
+          CONNECTIONS_TABLE: GameConnections
