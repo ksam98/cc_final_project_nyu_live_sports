@@ -3,6 +3,7 @@ import { useRouter } from 'next/router';
 import Link from 'next/link';
 import Player from '@/components/Player';
 import Button from '@/components/Button';
+import Chat from '@/components/Chat';
 
 export default function StreamApp() {
   const router = useRouter();
@@ -233,13 +234,7 @@ export default function StreamApp() {
 
         {/* RIGHT CHAT */}
         <div className="w-80 bg-white border-l flex flex-col">
-          <div className="p-4 border-b">
-            <h2 className="font-bold">Live Chat</h2>
-            <p className="text-sm text-nyu-neutral-500">Coming soon</p>
-          </div>
-          <div className="flex-1 flex items-center justify-center text-nyu-neutral-400">
-            Chat Placeholder
-          </div>
+          <Chat channelId={selectedChannel?.id} />
         </div>
       </div>
     </div>
