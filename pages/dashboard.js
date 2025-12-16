@@ -161,7 +161,7 @@ export default function Dashboard() {
 
           <div className="p-4">
             <h3 className="font-semibold text-lg text-nyu-neutral-800 mb-1 group-hover:text-nyu-primary-500 transition-colors">
-              {channel.broadcastName || `Stream ${channel.id.slice(0, 8)}`}
+              {channel.broadcastName ? channel.broadcastName.replace(/-/g, ' ').replace(/_/g, ' | ') : `Stream ${channel.id.slice(0, 8)}`}
             </h3>
             <p className="text-sm text-nyu-neutral-600">
               {new Date(channel.createdAt).toLocaleString()}

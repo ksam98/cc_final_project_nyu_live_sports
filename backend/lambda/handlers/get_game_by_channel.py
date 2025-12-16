@@ -2,10 +2,11 @@
 import json
 from lib.dynamodb import table
 from boto3.dynamodb.conditions import Key
+from urllib.parse import unquote
 
 def lambda_handler(event, context):
     channel_arn = event["pathParameters"]["channelArn"]
-
+    channel_arn = unquote(channel_arn)
     response = table.query(
         IndexName="ChannelIndex",
         KeyConditionExpression=Key("ivsChannelArn").eq(channel_arn),

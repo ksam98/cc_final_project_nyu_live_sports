@@ -60,7 +60,6 @@ export default function BroadcastApp() {
   /* ---------------- SCOREBOARD STATE ---------------- */
   const SPORTS = ['Basketball', 'Tennis', 'Badminton', 'Swimming'];
   const CATEGORIES = ['Men', 'Women', 'Mixed'];
-
   const [sport, setSport] = useState('');
   const [category, setCategory] = useState('');
   const [team1, setTeam1] = useState('');
@@ -109,7 +108,7 @@ export default function BroadcastApp() {
       setIsCreating(false);
     }
   };
-
+  // ---------------- CREATE GAME ---------------- //
   const handleCreateGame = async (channelArn, playBackUrl) => {
     setIsCreating(true);
     console.log('Creating game with channel ARN:', channelArn);
@@ -145,6 +144,29 @@ export default function BroadcastApp() {
       setIsCreating(false);
     }
   }
+  // Update score handlers
+  const updateScore = async (team) => {
+    if(team !== "home" && team !== "away") return;
+    const jsonObj = {
+      team: team
+    }
+    try {
+      const res = await fetch(`https://z1ktt0d2c9.execute-api.us-east-1.amazonaws.com/production/games/${game.gameId}/score`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(jsonObj),
+      });
+      const data = await res.json();
+      if (data.gameId) {
+        setGame(data);
+      } else {
+        console.error('Failed to update score: ' + data.message);
+      }
+    } catch (err) {
+      console.error('Error updating score:', err);
+    }
+  }
+
   /* ---------------- INIT BROADCAST ---------------- */
   useEffect(() => {
     if (sdkIsStarting.current) return;
@@ -307,7 +329,7 @@ export default function BroadcastApp() {
             <div className="flex justify-between items-center">
               <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.homeScore || 0}</span>
               <button 
-                onClick={() => {}} 
+                onClick={() => updateScore("home")} 
                 style={{
                   marginLeft: "10px", 
                   marginRight: "10px", 
@@ -327,7 +349,7 @@ export default function BroadcastApp() {
             <div className="flex justify-between items-center">
               <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.awayScore || 0}</span>
               <button 
-                onClick={() => {}} 
+                onClick={() => updateScore("away")} 
                 style={{
                   marginLeft: "10px", 
                   marginRight: "10px", 
