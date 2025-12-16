@@ -2,9 +2,9 @@
 // WARNING: These credentials should be moved to environment variables for production
 
 export const awsConfig = {
-    region: "us-east-1",
+    region: process.env.AWS_REGION || "us-east-1",
     credentials: {
-        accessKeyId: "AKIAYKR4ZKNLHUTB5UEC", // TODO: Add your AWS Access Key ID
-        secretAccessKey: "GrQ6muCmPMUvnISkVm7K2IRFJPt94uRwQ6cTxrSJ" // TODO: Add your AWS Secret Access Key
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
     }
 };
