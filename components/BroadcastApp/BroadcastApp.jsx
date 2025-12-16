@@ -320,14 +320,14 @@ export default function BroadcastApp() {
         <ControlBar />
 
           {game ? (
-            <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
-              <h2 className="text-3xl font-bold" style={{color:"white"}}>{game.name || "Home vs. Away | Soccor - Male"}</h2>
+            <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface bg-black flex flex-col gap-4">
+              <h2 className="text-3xl font-bold text-white">{game.name || "Home vs. Away | Soccor - Male"}</h2>
               <h2 className="text-lg font-bold" style={{color:"gray"}}>{game.description || "Test Description"}</h2>
               <div className="flex justify-between items-center">
                 <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold" style={{color:"white"}}>{game.home || "Test Home"}</span>
+            <span className="text-2xl font-bold text-white">{game.home || "Test Home"}</span>
             <div className="flex justify-between items-center">
-              <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.homeScore || 0}</span>
+              <span className="text-4xl font-extrabold text-white">{game.homeScore || 0}</span>
               <button 
                 onClick={() => updateScore("home")} 
                 style={{
@@ -345,9 +345,9 @@ export default function BroadcastApp() {
                 </div>
                 <span className="text-3xl font-bold">vs</span>
                 <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold" style={{color:"white"}}>{game.away || "Test Away"}</span>
+            <span className="text-2xl font-bold text-white">{game.away || "Test Away"}</span>
             <div className="flex justify-between items-center">
-              <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.awayScore || 0}</span>
+              <span className="text-4xl font-extrabold text-white">{game.awayScore || 0}</span>
               <button 
                 onClick={() => updateScore("away")} 
                 style={{
