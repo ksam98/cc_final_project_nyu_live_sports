@@ -52,9 +52,11 @@ export default function BroadcastApp() {
   const [canvasWidth, setCanvasWidth] = useState();
   const [canvasHeight, setCanvasHeight] = useState();
   const [videoStream, setVideoStream] = useState();
-  const [broadcastName, setBroadcastName] = useState('');
   const [isCreating, setIsCreating] = useState(false);
-
+  const [game, setGame] = useState(null);
+  const [channelArn, setChannelArn] = useState('');
+  const [description, setDescription] = useState('');
+  const [playBackUrl, setPlaybackUrl] = useState('');
   /* ---------------- SCOREBOARD STATE ---------------- */
   const SPORTS = ['Basketball', 'Tennis', 'Badminton', 'Swimming'];
   const CATEGORIES = ['Men', 'Women', 'Mixed'];
@@ -68,9 +70,15 @@ export default function BroadcastApp() {
 
   /* ---------------- CREATE CHANNEL ---------------- */
   const handleCreateChannel = async () => {
-    if (!broadcastName) return;
     setIsCreating(true);
+    if (!sport || !category || !team1 || !team2 || !description) {
+      toast.error('Please fill in all scoreboard fields.');
+      setIsCreating(false);
+      return;
+    }
+    const name = `${team1} vs ${team2} | ${sport} - ${category}`;
     const toastId = toast.loading('Creating Channel...');
+    const broadcastName = `${team1}-vs-${team2}_${sport}_${category}`;
     try {
       const res = await fetch('/api/createChannel', {
         method: 'POST',
@@ -82,17 +90,61 @@ export default function BroadcastApp() {
         setIngestEndpoint(data.ingestEndpoint);
         setStreamKey(data.streamKey);
         toast.success(`Channel "${data.channelName}" created!`, { id: toastId });
+        console.log('Channel created:', data);
+        if (data.arn){
+          await handleCreateGame(data.arn, data.playbackUrl);
+        }
+        else{
+          setIsCreating(false)
+          toast.error('Channel ARN missing, cannot create game.', { id: toastId });
+        }
       } else {
         toast.error('Failed to create channel: ' + data.message, { id: toastId });
       }
     } catch (err) {
       console.error(err);
       toast.error('Error creating channel', { id: toastId });
+      setIsCreating(false);
     } finally {
       setIsCreating(false);
     }
   };
 
+  const handleCreateGame = async (channelArn, playBackUrl) => {
+    setIsCreating(true);
+    console.log('Creating game with channel ARN:', channelArn);
+    const name = `${team1} vs ${team2} | ${sport} - ${category}`;
+    const toastId = toast.loading('Creating Game...');
+    const jsonString = JSON.stringify({
+          description: description,
+          name: name,
+          ivsChannelArn: channelArn,
+          home: team1,
+          away: team2,
+          ivsPlaybackUrl: playBackUrl
+        })
+    try {
+      const res = await fetch('https://z1ktt0d2c9.execute-api.us-east-1.amazonaws.com/production/games', {
+        method: 'POST',
+        body: JSON.stringify({
+          body: jsonString
+        }),
+      });
+      const data = await res.json();
+      if (data.body) {
+        const dataBody = JSON.parse(data.body);
+        setGame(dataBody);
+        toast.success(`Game created!`, { id: toastId });
+      } else {
+        toast.error('Failed to create game: ' + data.message, { id: toastId });
+      }
+      setIsCreating(false);
+    } catch (err) {
+      console.error(err);
+      toast.error('Error creating game', { id: toastId });
+      setIsCreating(false);
+    }
+  }
   /* ---------------- INIT BROADCAST ---------------- */
   useEffect(() => {
     if (sdkIsStarting.current) return;
@@ -107,17 +159,17 @@ export default function BroadcastApp() {
               const { width, height } = videoStream
                 .getTracks()[0]
                 .getSettings();
-            refreshSceneRef.current = refreshCurrentScene;
-            showFullScreenCam({
-              cameraStream: enableCanvasCamera
-                ? canvasElemRef.current
-                : videoStream,
-              cameraId: videoDeviceId,
-              cameraIsCanvas: enableCanvasCamera,
-              micStream: audioStream,
-              micId: audioDeviceId,
-              showMuteIcon: false,
-            });
+              refreshSceneRef.current = refreshCurrentScene;
+              showFullScreenCam({
+                cameraStream: enableCanvasCamera
+                  ? canvasElemRef.current
+                  : videoStream,
+                cameraId: videoDeviceId,
+                cameraIsCanvas: enableCanvasCamera,
+                micStream: audioStream,
+                micId: audioDeviceId,
+                showMuteIcon: false,
+              });
             })
             .catch((err) => {
               console.error(err);
@@ -204,7 +256,7 @@ export default function BroadcastApp() {
     }
   }, [isSupported]);
 
-  const title = `Amazon IVS – Web Broadcast Tool - ${
+  const title = `Amazon IVS - Web Broadcast Tool - ${
     isLive ? 'LIVE' : 'Offline'
   }`;
 
@@ -218,22 +270,6 @@ export default function BroadcastApp() {
 
         {/* TOP BAR */}
         <div className="w-full p-4 flex justify-between items-center border-b border-gray-700">
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Enter Broadcast Name"
-              className="p-2 rounded text-black w-64"
-              value={broadcastName}
-              onChange={(e) => setBroadcastName(e.target.value)}
-            />
-            <button
-              onClick={handleCreateChannel}
-              disabled={isCreating || !broadcastName}
-              className="bg-primary text-white px-4 py-2 rounded font-bold disabled:opacity-50"
-            >
-              {isCreating ? 'Creating...' : 'Create Channel'}
-            </button>
-          </div>
 
           <div className="flex items-center gap-3">
             <span className="text-sm text-gray-400">
@@ -261,83 +297,129 @@ export default function BroadcastApp() {
 
         <ControlBar />
 
-        {/* SCOREBOARD PANEL */}
-        <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+          {game ? (
+            <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+              <h2 className="text-3xl font-bold" style={{color:"white"}}>{game.name || "Home vs. Away | Soccor - Male"}</h2>
+              <h2 className="text-lg font-bold" style={{color:"gray"}}>{game.description || "Test Description"}</h2>
+              <div className="flex justify-between items-center">
+                <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold" style={{color:"white"}}>{game.home || "Test Home"}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.homeScore || 0}</span>
+              <button 
+                onClick={() => {}} 
+                style={{
+                  marginLeft: "10px", 
+                  marginRight: "10px", 
+                  padding: "5px 10px", 
+                  backgroundColor: "white", 
+                  borderRadius: "4px", 
+                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                  fontWeight: "bold", 
+                  cursor: "pointer"
+                }}
+              >+1</button>
+            </div>
+                </div>
+                <span className="text-3xl font-bold">vs</span>
+                <div className="flex flex-col items-center">
+            <span className="text-2xl font-bold" style={{color:"white"}}>{game.away || "Test Away"}</span>
+            <div className="flex justify-between items-center">
+              <span className="text-4xl font-extrabold" style={{color:"white"}}>{game.awayScore || 0}</span>
+              <button 
+                onClick={() => {}} 
+                style={{
+                  marginLeft: "10px", 
+                  marginRight: "10px", 
+                  padding: "5px 10px", 
+                  backgroundColor: "white", 
+                  borderRadius: "4px", 
+                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                  fontWeight: "bold", 
+                  cursor: "pointer"
+                }}
+              >+1</button>
+            </div>
+                </div>
+              </div>
+            </div>
+          ): 
+          <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
 
-          <div className="flex gap-4">
-            <select
-              value={sport}
-              onChange={(e) => setSport(e.target.value)}
-              className="p-2 rounded text-black w-1/2"
-            >
-              <option value="">Select Sport</option>
-              {SPORTS.map((s) => (
-                <option key={s} value={s}>{s}</option>
-              ))}
-            </select>
+            <div className="flex gap-4">
+              <select
+                value={sport}
+                onChange={(e) => setSport(e.target.value)}
+                className="p-2 rounded text-black w-1/2"
+              >
+                <option value="">Select Sport</option>
+                {SPORTS.map((s) => (
+            <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
 
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="p-2 rounded text-black w-1/2"
-            >
-              <option value="">Select Category</option>
-              {CATEGORIES.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
+              <select
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="p-2 rounded text-black w-1/2"
+              >
+                <option value="">Select Category</option>
+                {CATEGORIES.map((c) => (
+            <option key={c} value={c}>{c}</option>
+                ))}
+              </select>
+            </div>
 
-          <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-6">
 
-            {/* TEAM 1 */}
+              {/* TEAM 1 */}
             <div className="flex flex-col gap-2">
               <input
                 type="text"
-                placeholder="Enter Team 1 Name"
+                placeholder="Home Team Name"
                 value={team1}
                 onChange={(e) => setTeam1(e.target.value)}
                 className="p-2 rounded text-black"
               />
-
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => setScore1(Math.max(0, score1 - 1))}>−</button>
-                <input
-                  type="number"
-                  value={score1}
-                  onChange={(e) => setScore1(Number(e.target.value))}
-                  className="w-16 text-center text-black rounded"
-                />
-                <button onClick={() => setScore1(score1 + 1)}>+</button>
-              </div>
             </div>
 
             {/* TEAM 2 */}
             <div className="flex flex-col gap-2">
               <input
                 type="text"
-                placeholder="Enter Team 2 Name"
+                placeholder="Away Team Name"
                 value={team2}
                 onChange={(e) => setTeam2(e.target.value)}
                 className="p-2 rounded text-black"
               />
-
-
-              <div className="flex items-center gap-2">
-                <button onClick={() => setScore2(Math.max(0, score2 - 1))}>−</button>
-                <input
-                  type="number"
-                  value={score2}
-                  onChange={(e) => setScore2(Number(e.target.value))}
-                  className="w-16 text-center text-black rounded"
-                />
-                <button onClick={() => setScore2(score2 + 1)}>+</button>
-              </div>
             </div>
-
+            <div className="flex flex-col gap-2 col-span-2">
+              <input
+                type="text"
+                placeholder="Game Description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="p-2 rounded text-black"
+              />
+            </div>
+            <div className="flex col-span-2 justify-center items-end">
+              <button 
+              onClick={handleCreateChannel}
+              style={{
+                marginLeft: "10px", 
+                marginRight: "10px", 
+                padding: "5px 10px", 
+                backgroundColor: "#39e75f", 
+                borderRadius: "4px", 
+                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                fontWeight: "bold", 
+                cursor: "pointer"
+              }}
+              disabled={isCreating}
+            > { isCreating ? "Creating..." : "Create Game!"}</button>
+            </div>
           </div>
-        </div>
+        </div>}
 
         {enableCanvasCamera && (
           <CameraCanvas

@@ -15,8 +15,8 @@ export default async function handler(req, res) {
     }
 
     // Sanitize name: alphanumeric and underscores only
-    const sanitizedName = broadcastName.replace(/[^a-zA-Z0-9 ]/g, "").replace(/\s+/g, "_");
-    const channelName = `nyu-cc-final-${sanitizedName}-${Date.now()}`;
+    const sanitizedName = broadcastName.replace(/[^a-zA-Z0-9_-]/g, "");
+    const channelName = `${sanitizedName}-${Date.now()}`;
 
     try {
         // Initialize Clients
@@ -61,7 +61,8 @@ export default async function handler(req, res) {
             ingestEndpoint: item.ingestEndpoint,
             streamKey: item.streamKey,
             playbackUrl: item.playbackUrl,
-            channelName: channel.name
+            channelName: channel.name,
+            arn: channel.arn
         });
 
     } catch (error) {
