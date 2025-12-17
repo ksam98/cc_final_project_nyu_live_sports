@@ -27,6 +27,7 @@ function SkeletonCard() {
 
 export default function Dashboard() {
   const [channels, setChannels] = useState([]);
+  const [endedChannels, setEndedChannels] = useState([]);
   const [loading, setLoading] = useState(false); // fetch state
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('Live');
@@ -74,11 +75,17 @@ export default function Dashboard() {
       const data = await res.json();
 
       if (data.success && Array.isArray(data.channels)) {
-        const liveChannels = data.channels.slice().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const liveChannels = data.channels.slice();
         setChannels(liveChannels);
       } else {
         setChannels([]);
         setError('No channels returned by the server.');
+      }
+      if (data.success && Array.isArray(data.endedChannels)) {
+        const endedChannels = data.endedChannels.slice();
+        setEndedChannels(endedChannels);
+      } else {
+        setEndedChannels([]);
       }
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -172,6 +179,44 @@ export default function Dashboard() {
     ));
   }, [channels]);
 
+    // Memoize rendered channels to avoid re-renders
+  const endedChannelCards = useMemo(() => {
+    if (!endedChannels || endedChannels.length === 0) return null;
+    return endedChannels.map((channel) => (
+      <Link key={channel.id} href={`/stream?id=${channel.id}`} className="group" aria-label={`Open stream ${channel.broadcastName || channel.id}`}>
+        <div className="bg-white rounded-lg shadow-sm border border-nyu-neutral-300 overflow-hidden hover:shadow-lg transition-shadow duration-200">
+          <div className="aspect-video bg-gradient-to-br from-nyu-primary-600 to-nyu-secondary-700 relative overflow-hidden">
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-white text-center">
+                <div className="mb-2">
+                  <svg className="w-16 h-16 mx-auto opacity-75" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium">Ended Stream</p>
+              </div>
+            </div>
+
+            <div className="absolute top-4 right-4 bg-gray-500 text-white px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-2">
+              <span className="w-2 h-2 bg-white rounded-full animate-pulse" />
+              ENDED
+            </div>
+          </div>
+
+          <div className="p-4">
+            <h3 className="font-semibold text-lg text-nyu-neutral-800 mb-1 group-hover:text-nyu-primary-500 transition-colors">
+              {channel.broadcastName ? channel.broadcastName.replace(/-/g, ' ').replace(/_/g, ' | ') : `Stream ${channel.id.slice(0, 8)}`}
+            </h3>
+            <p className="text-sm text-nyu-neutral-600">
+              {new Date(channel.createdAt).toLocaleString()}
+            </p>
+          </div>
+        </div>
+      </Link>
+    ));
+  }, [endedChannels]);
+
+
   // Loading state: show spinners or skeletons
   if (authLoading || (loading && channels.length === 0)) {
     return (
@@ -213,10 +258,35 @@ export default function Dashboard() {
                 <p className="text-sm text-nyu-neutral-600">Welcome back, {user?.username}</p>
               </div>
               <div className="flex items-center gap-3">
-                <Button type="secondary" onClick={() => fetchChannels()} disabled={loading}>
+                <button 
+                  className="bg-primary hover:bg-primaryAlt text-white"
+                  style={{
+                          marginLeft: "0px", 
+                          marginRight: "0px", 
+                          padding: "4px 10px", 
+                          borderRadius: "4px", 
+                          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                          fontWeight: "bold", 
+                          cursor: "pointer"
+                        }}
+                  onClick={() => fetchChannels()} 
+                  disabled={loading}>
                   {loading ? 'Refreshing…' : 'Refresh'}
-                </Button>
-                <Button type="secondary" onClick={handleLogout}>Sign Out</Button>
+                </button>
+                <button 
+                  className="bg-destruct hover:bg-destructAlt text-white"
+                  style={{
+                          marginLeft: "0px", 
+                          marginRight: "0px", 
+                          padding: "4px 10px", 
+                          borderRadius: "4px", 
+                          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                          fontWeight: "bold", 
+                          cursor: "pointer"
+                        }}
+                  onClick={handleLogout}>
+                    Sign Out
+                </button>
               </div>
             </div>
           </div>
@@ -260,7 +330,40 @@ export default function Dashboard() {
             </div>
 
           )}
+          {activeTab === 'Ended' && (
 
+            <div className="space-y-6">
+              {/* Intro text */}
+              <p className="text-nyu-neutral-600">
+                Streams that have ended recently
+              </p>
+
+              {/* Error */}
+              {error && (
+                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
+
+              {/* Empty state */}
+              {endedChannels.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-nyu-neutral-300">
+                  <p className="text-lg text-nyu-neutral-600 mb-2">
+                    No streams available
+                  </p>
+                  <p className="text-sm text-nyu-neutral-400">
+                    Check back later for live sports events
+                  </p>
+                </div>
+              ) : (
+                /* Cards grid */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {endedChannelCards}
+                </div>
+              )}
+            </div>
+
+          )}
           {activeTab === 'Categories' && (
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {sports.map((sport) => (

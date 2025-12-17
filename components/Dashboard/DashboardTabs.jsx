@@ -1,5 +1,5 @@
 export default function DashboardTabs({ activeTab, setActiveTab }) {
-  const tabs = ['Live', 'Categories', 'Schedule', 'Favorites'];
+  const tabs = ['Live', 'Ended', 'Categories', 'Schedule', 'Favorites'];
 
   return (
     <div className="flex gap-6 border-b border-border mb-6">

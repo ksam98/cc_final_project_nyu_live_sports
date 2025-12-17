@@ -8,6 +8,7 @@ async function isStreamLive(channelArn, ivsClient) {
     try {
         const command = new GetStreamCommand({ channelArn });
         const response = await ivsClient.send(command);
+        console.log(`Stream status for ${channelArn}:`, response.stream?.state);
         return response.stream?.state === 'LIVE';
     } catch (error) {
         // Stream doesn't exist or is offline
@@ -59,15 +60,24 @@ export default async function handler(req, res) {
                 ...channel,
                 isLive: true
             }));
-
+        const endedChannels = results
+            .filter(({ isLive }) => !isLive)
+            .map(({ channel }) => ({
+                ...channel,
+                isLive: false
+            }));
+        
+        endedChannels.sort((a, b) => {
+            return new Date(b.createdAt) - new Date(a.createdAt);
+        });
         // Sort by creation date descending (newest first)
         liveChannels.sort((a, b) => {
             return new Date(b.createdAt) - new Date(a.createdAt);
         });
-
         res.status(200).json({
             success: true,
-            channels: liveChannels
+            channels: liveChannels,
+            endedChannels: endedChannels
         });
 
     } catch (error) {
