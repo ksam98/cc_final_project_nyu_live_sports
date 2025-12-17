@@ -12,7 +12,8 @@ export default function StreamApp() {
   const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [game, setGame] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
 
   // 🔹 Example metadata (later comes from DB)
@@ -49,7 +50,7 @@ export default function StreamApp() {
     if (!router.isReady) return;
 
     let cancelled = false;
-
+    let ws = null;
     const fetchChannels = async () => {
       try {
         const res = await fetch('/api/getChannels');
@@ -64,6 +65,8 @@ export default function StreamApp() {
             ? data.channels.find(c => c.id === id)
             : data.channels[0];
           setSelectedChannel(found || data.channels[0]);
+          const channelArn = found ? found.arn : data.channels[0].arn;
+          await fetchGameAndConnect(channelArn);
         }
       } catch (err) {
         console.error('Error fetching channels:', err);
@@ -72,8 +75,46 @@ export default function StreamApp() {
       }
     };
 
+    const fetchGameAndConnect = async (channelArn) => {
+      try {
+        const res = await fetch(`https://z1ktt0d2c9.execute-api.us-east-1.amazonaws.com/production/games/by-channel/${encodeURIComponent(channelArn)}`);
+        const data = await res.json();
+        setGame(data);
+        ws = new WebSocket(`wss://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production?gameId=${data.gameId}`);
+        
+        ws.onopen = () => {
+          console.log('WebSocket connected for live scores');
+        }
+        ws.onmessage = (event) => {
+          const msg = JSON.parse(event.data);
+
+          if (msg.type === "SCORE_UPDATE") {
+            setGame(prev => ({
+              ...prev,
+              homeScore: msg.homeScore,
+              awayScore: msg.awayScore
+            }));
+          }
+          // Handle other message types (Stream updates, )
+        };
+        ws.onerror = (error) => {
+          console.error('WebSocket error:', error);
+        };
+        ws.onclose = () => {
+          console.log('WebSocket disconnected');
+        };
+        setSocket(ws);
+        // Set game data to state if needed
+      } catch (err) {
+        console.error('Error fetching game data:', err);
+      }
+    }
+
     fetchChannels();
-    return () => { cancelled = true; };
+    return () => { 
+      cancelled = true; 
+      if (ws) ws.close();
+    };
   }, [router.isReady]);
 
   if (loading) {
@@ -131,22 +172,22 @@ export default function StreamApp() {
 
               {/* Sport + Category */}
               <p className="text-sm text-nyu-neutral-600 mb-4">
-                {sport} • {category}
+                {game && game.name ? `${game.name.split('|')[1].replace("-", "•")}` : 'Fetching sport/category...'}
               </p>
 
               <div className="bg-gradient-to-r from-nyu-primary-600 to-nyu-secondary-700 rounded-lg p-6 text-white">
                 <div className="flex justify-between items-center">
                   <div className="text-center flex-1">
-                    <div className="text-xl">{liveScore.homeTeam}</div>
-                    <div className="text-4xl font-bold">{liveScore.homeScore}</div>
+                    <div className="text-xl">{game && game.home ? game.home : 'Fetching home team...'}</div>
+                    <div className="text-4xl font-bold">{game && game.homeScore ? game.homeScore : 'Fetching home score...'}</div>
                   </div>
                   <div className="text-center">
-                    <div>{liveScore.period}</div>
-                    <div className="font-bold">{liveScore.time}</div>
+                    {/* <div>{game && game.period ? game.period : 'Fetching period...'}</div>
+                    <div className="font-bold">{game && game.time ? game.time : 'Fetching time...'}</div> */}
                   </div>
                   <div className="text-center flex-1">
-                    <div className="text-xl">{liveScore.awayTeam}</div>
-                    <div className="text-4xl font-bold">{liveScore.awayScore}</div>
+                    <div className="text-xl">{game && game.away ? game.away : 'Fetching away team...'}</div>
+                    <div className="text-4xl font-bold">{game && game.awayScore ? game.awayScore : 'Fetching away score...'}</div>
                   </div>
                 </div>
               </div>

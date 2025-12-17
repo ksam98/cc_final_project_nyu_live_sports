@@ -20,7 +20,7 @@ def broadcast_to_game(game_id, payload):
         try:
             apigw.post_to_connection(
                 ConnectionId=item["connectionId"],
-                Data=json.dumps(payload)
+                Data=json.dumps(payload, default=str)
             )
         except apigw.exceptions.GoneException:
             table.delete_item(
