@@ -217,55 +217,58 @@ export default function StreamApp() {
                 {/* Tab Content */}
                 <div className="mt-6">
                   {activeTab === 'stats' && (
-                    <table className="w-full border rounded-lg overflow-hidden">
-                      <thead className="bg-nyu-neutral-100">
-                        <tr>
-                          <th className="p-3 text-left">Opponent</th>
-                          <th className="p-3">Date</th>
-                          <th className="p-3">Score</th>
-                          <th className="p-3">Result</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {teamStats.map((row, i) => (
-                          <tr key={i} className="border-t">
-                            <td className="p-3">{row.opponent}</td>
-                            <td className="p-3 text-center">{row.date}</td>
-                            <td className="p-3 text-center">{row.score}</td>
-                            <td className="p-3 text-center">{row.result}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    <h3 className="text-nyu-primary-300 font-semibold text-lg mb-4">Coming Soon...</h3>
+                    // <table className="w-full border rounded-lg overflow-hidden">
+                    //   <thead className="bg-nyu-neutral-100">
+                    //     <tr>
+                    //       <th className="p-3 text-left">Opponent</th>
+                    //       <th className="p-3">Date</th>
+                    //       <th className="p-3">Score</th>
+                    //       <th className="p-3">Result</th>
+                    //     </tr>
+                    //   </thead>
+                    //   <tbody>
+                    //     {teamStats.map((row, i) => (
+                    //       <tr key={i} className="border-t">
+                    //         <td className="p-3">{row.opponent}</td>
+                    //         <td className="p-3 text-center">{row.date}</td>
+                    //         <td className="p-3 text-center">{row.score}</td>
+                    //         <td className="p-3 text-center">{row.result}</td>
+                    //       </tr>
+                    //     ))}
+                    //   </tbody>
+                    // </table>
                   )}
 
                   {activeTab === 'schedule' && (
-                    <ul className="space-y-4">
-                      {schedule.map((game, i) => (
-                        <li key={i} className="bg-white border p-4 rounded-lg">
-                          <div className="font-semibold">{game.opponent}</div>
-                          <div className="text-sm text-nyu-neutral-600">
-                            {game.date} • {game.time}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
+                    <h3 className="text-nyu-primary-300 font-semibold text-lg mb-4">Coming Soon...</h3>
+                    // <ul className="space-y-4">
+                    //   {schedule.map((game, i) => (
+                    //     <li key={i} className="bg-white border p-4 rounded-lg">
+                    //       <div className="font-semibold">{game.opponent}</div>
+                    //       <div className="text-sm text-nyu-neutral-600">
+                    //         {game.date} • {game.time}
+                    //       </div>
+                    //     </li>
+                    //   ))}
+                    // </ul>
                   )}
 
                   {activeTab === 'roster' && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {roster.map((player, i) => (
-                        <div
-                          key={i}
-                          className="bg-white border rounded-lg p-4 text-center"
-                        >
-                          <div className="font-bold">{player.name}</div>
-                          <div className="text-sm text-nyu-neutral-600">
-                            {player.role}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    <h3 className="text-nyu-primary-300 font-semibold text-lg mb-4">Coming Soon...</h3>
+                    // <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    //   {roster.map((player, i) => (
+                    //     <div
+                    //       key={i}
+                    //       className="bg-white border rounded-lg p-4 text-center"
+                    //     >
+                    //       <div className="font-bold">{player.name}</div>
+                    //       <div className="text-sm text-nyu-neutral-600">
+                    //         {player.role}
+                    //       </div>
+                    //     </div>
+                    //   ))}
+                    // </div>
                   )}
                 </div>
               </div>

@@ -58,8 +58,8 @@ export default function BroadcastApp() {
   const [description, setDescription] = useState('');
   const [playBackUrl, setPlaybackUrl] = useState('');
   /* ---------------- SCOREBOARD STATE ---------------- */
-  const SPORTS = ['Basketball', 'Tennis', 'Badminton', 'Swimming'];
-  const CATEGORIES = ['Men', 'Women', 'Mixed'];
+  const SPORTS = ['Cricket', 'Basketball', 'Tennis', 'Badminton', 'Swimming', 'Soccer', 'Volleyball', 'Baseball', 'Softball', 'Hockey'];
+  const CATEGORIES = ['Men', 'Women', 'Mixed', 'Junior', 'Senior'];
   const [sport, setSport] = useState('');
   const [category, setCategory] = useState('');
   const [team1, setTeam1] = useState('');
@@ -292,20 +292,29 @@ export default function BroadcastApp() {
 
         {/* TOP BAR */}
         <div className="w-full p-4 flex justify-between items-center border-b border-gray-700">
-
+          <div className="flex items-center gap-3"></div>
           <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-400">
+            <span className="text-lg text-primary">
               Welcome, {user?.username}
             </span>
-            <Button
-              type="secondary"
+            <button
+              className="bg-destruct hover:bg-destructAlt text-white"
+              style={{
+                        marginLeft: "10px", 
+                        marginRight: "10px", 
+                        padding: "4px 10px", 
+                        borderRadius: "4px", 
+                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                        fontWeight: "bold", 
+                        cursor: "pointer"
+                      }}
               onClick={async () => {
                 await logout();
                 router.push('/');
               }}
             >
               Sign Out
-            </Button>
+            </button>
           </div>
         </div>
 
@@ -313,49 +322,52 @@ export default function BroadcastApp() {
         <StatusBar />
 
         {/* SMALLER STREAM PREVIEW */}
-        <div className="w-full max-w-4xl mx-auto mt-4 aspect-video">
+        <div className="w-full max-w-5xl mx-auto mt-4 aspect-video">
           <StreamPreview previewRef={previewRef} />
         </div>
 
         <ControlBar />
 
           {game ? (
-            <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface bg-black flex flex-col gap-4">
-              <h2 className="text-3xl font-bold text-white">{game.name || "Home vs. Away | Soccor - Male"}</h2>
-              <h2 className="text-lg font-bold" style={{color:"gray"}}>{game.description || "Test Description"}</h2>
+            <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+              <h2 className="text-4xl font-bold text-primary">{game.name || "Home vs. Away | Soccor - Male"}</h2>
+              <h2 className="text-xl font-bold text-secondary">{game.description || "Test Description"}</h2>
+              <hr className="border-gray-700" />
               <div className="flex justify-between items-center">
                 <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-white">{game.home || "Test Home"}</span>
-            <div className="flex justify-between items-center">
-              <span className="text-4xl font-extrabold text-white">{game.homeScore || 0}</span>
-              <button 
-                onClick={() => updateScore("home")} 
-                style={{
-                  marginLeft: "10px", 
-                  marginRight: "10px", 
-                  padding: "5px 10px", 
-                  backgroundColor: "white", 
-                  borderRadius: "4px", 
-                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                  fontWeight: "bold", 
-                  cursor: "pointer"
-                }}
-              >+1</button>
-            </div>
+                  <span className="text-3xl font-bold text-primaryAlt">{game.home || "Test Home"}</span>
+                  <br/>
+                  <div className="flex justify-between items-center">
+                    <span className="text-3xl font-extrabold text-primaryAlt">{game.homeScore || 0}</span>
+                    <button 
+                      className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
+                      onClick={() => updateScore("home")} 
+                      style={{
+                        marginLeft: "10px", 
+                        marginRight: "0px", 
+                        padding: "4px 10px", 
+                        borderRadius: "8px", 
+                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                        fontWeight: "bold", 
+                        cursor: "pointer"
+                      }}
+                    >+1</button>
+                  </div>
                 </div>
                 <span className="text-3xl font-bold">vs</span>
                 <div className="flex flex-col items-center">
-            <span className="text-2xl font-bold text-white">{game.away || "Test Away"}</span>
+            <span className="text-3xl font-bold text-primaryAlt">{game.away || "Test Away"}</span>
+            <br/>
             <div className="flex justify-between items-center">
-              <span className="text-4xl font-extrabold text-white">{game.awayScore || 0}</span>
+              <span className="text-3xl font-extrabold text-primaryAlt">{game.awayScore || 0}</span>
               <button 
+                className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
                 onClick={() => updateScore("away")} 
                 style={{
                   marginLeft: "10px", 
-                  marginRight: "10px", 
-                  padding: "5px 10px", 
-                  backgroundColor: "white", 
-                  borderRadius: "4px", 
+                  marginRight: "0px", 
+                  padding: "4px 10px", 
+                  borderRadius: "8px", 
                   boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
                   fontWeight: "bold", 
                   cursor: "pointer"
@@ -366,13 +378,13 @@ export default function BroadcastApp() {
               </div>
             </div>
           ): 
-          <div className="w-full max-w-4xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+          <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surfaceAlt flex flex-col gap-4">
 
             <div className="flex gap-4">
               <select
                 value={sport}
                 onChange={(e) => setSport(e.target.value)}
-                className="p-2 rounded text-black w-1/2"
+                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
               >
                 <option value="">Select Sport</option>
                 {SPORTS.map((s) => (
@@ -383,7 +395,7 @@ export default function BroadcastApp() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="p-2 rounded text-black w-1/2"
+                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
               >
                 <option value="">Select Category</option>
                 {CATEGORIES.map((c) => (
@@ -401,7 +413,8 @@ export default function BroadcastApp() {
                 placeholder="Home Team Name"
                 value={team1}
                 onChange={(e) => setTeam1(e.target.value)}
-                className="p-2 rounded text-black"
+                style={{width:"100%"}}
+                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
               />
             </div>
 
@@ -411,8 +424,9 @@ export default function BroadcastApp() {
                 type="text"
                 placeholder="Away Team Name"
                 value={team2}
+                style={{width:"100%"}}
                 onChange={(e) => setTeam2(e.target.value)}
-                className="p-2 rounded text-black"
+                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
               />
             </div>
             <div className="flex flex-col gap-2 col-span-2">
@@ -420,23 +434,24 @@ export default function BroadcastApp() {
                 type="text"
                 placeholder="Game Description"
                 value={description}
+                style={{width:"100%"}}
                 onChange={(e) => setDescription(e.target.value)}
-                className="p-2 rounded text-black"
+                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
               />
             </div>
             <div className="flex col-span-2 justify-center items-end">
               <button 
+                className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
+                style={{
+                  marginLeft: "10px", 
+                  marginRight: "10px", 
+                  padding: "4px 10px", 
+                  borderRadius: "8px", 
+                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
+                  fontWeight: "bold", 
+                  cursor: "pointer"
+                }}
               onClick={handleCreateChannel}
-              style={{
-                marginLeft: "10px", 
-                marginRight: "10px", 
-                padding: "5px 10px", 
-                backgroundColor: "#39e75f", 
-                borderRadius: "4px", 
-                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                fontWeight: "bold", 
-                cursor: "pointer"
-              }}
               disabled={isCreating}
             > { isCreating ? "Creating..." : "Create Game!"}</button>
             </div>
