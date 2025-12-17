@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useRouter } from 'next/router';
+import Chat from '@/components/Chat';
 import ToasterBar from '@/components/ToasterBar';
 import StatusBar from '@/components/StatusBar';
 import StreamPreview from '@/components/StreamPreview';
@@ -88,12 +89,13 @@ export default function BroadcastApp() {
       if (data.success) {
         setIngestEndpoint(data.ingestEndpoint);
         setStreamKey(data.streamKey);
+        setChannelArn(data.arn);
         toast.success(`Channel "${data.channelName}" created!`, { id: toastId });
         console.log('Channel created:', data);
-        if (data.arn){
+        if (data.arn) {
           await handleCreateGame(data.arn, data.playbackUrl);
         }
-        else{
+        else {
           setIsCreating(false)
           toast.error('Channel ARN missing, cannot create game.', { id: toastId });
         }
@@ -115,13 +117,13 @@ export default function BroadcastApp() {
     const name = `${team1} vs ${team2} | ${sport} - ${category}`;
     const toastId = toast.loading('Creating Game...');
     const jsonString = JSON.stringify({
-          description: description,
-          name: name,
-          ivsChannelArn: channelArn,
-          home: team1,
-          away: team2,
-          ivsPlaybackUrl: playBackUrl
-        })
+      description: description,
+      name: name,
+      ivsChannelArn: channelArn,
+      home: team1,
+      away: team2,
+      ivsPlaybackUrl: playBackUrl
+    })
     try {
       const res = await fetch('https://z1ktt0d2c9.execute-api.us-east-1.amazonaws.com/production/games', {
         method: 'POST',
@@ -146,7 +148,7 @@ export default function BroadcastApp() {
   }
   // Update score handlers
   const updateScore = async (team) => {
-    if(team !== "home" && team !== "away") return;
+    if (team !== "home" && team !== "away") return;
     const jsonObj = {
       team: team
     }
@@ -195,7 +197,7 @@ export default function BroadcastApp() {
             })
             .catch((err) => {
               console.error(err);
-          });
+            });
         }
       }
     );
@@ -272,15 +274,14 @@ export default function BroadcastApp() {
           );
         },
         {
-        id: 'BROWSER_SUPPORT',
-        duration: Infinity,
-      });
+          id: 'BROWSER_SUPPORT',
+          duration: Infinity,
+        });
     }
   }, [isSupported]);
 
-  const title = `Amazon IVS - Web Broadcast Tool - ${
-    isLive ? 'LIVE' : 'Offline'
-  }`;
+  const title = `Amazon IVS - Web Broadcast Tool - ${isLive ? 'LIVE' : 'Offline'
+    }`;
 
   return (
     <>
@@ -300,14 +301,14 @@ export default function BroadcastApp() {
             <button
               className="bg-destruct hover:bg-destructAlt text-white"
               style={{
-                        marginLeft: "10px", 
-                        marginRight: "10px", 
-                        padding: "4px 10px", 
-                        borderRadius: "4px", 
-                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                        fontWeight: "bold", 
-                        cursor: "pointer"
-                      }}
+                marginLeft: "10px",
+                marginRight: "10px",
+                padding: "4px 10px",
+                borderRadius: "4px",
+                boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                fontWeight: "bold",
+                cursor: "pointer"
+              }}
               onClick={async () => {
                 await logout();
                 router.push('/');
@@ -321,142 +322,156 @@ export default function BroadcastApp() {
         <ToasterBar />
         <StatusBar />
 
-        {/* SMALLER STREAM PREVIEW */}
-        <div className="w-full max-w-5xl mx-auto mt-4 aspect-video">
-          <StreamPreview previewRef={previewRef} />
-        </div>
+        {/* MAIN CONTENT SPLIT VIEW */}
+        <div className="flex flex-1 overflow-hidden h-full">
 
-        <ControlBar />
+          {/* LEFT SIDE: Stream & Game Controls */}
+          <div className="flex-1 overflow-y-auto w-full flex flex-col items-center p-4">
+            {/* SMALLER STREAM PREVIEW */}
+            <div className="w-full max-w-5xl mx-auto mt-4 aspect-video">
+              <StreamPreview previewRef={previewRef} />
+            </div>
 
-          {game ? (
-            <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
-              <h2 className="text-4xl font-bold text-primary">{game.name || "Home vs. Away | Soccor - Male"}</h2>
-              <h2 className="text-xl font-bold text-secondary">{game.description || "Test Description"}</h2>
-              <hr className="border-gray-700" />
-              <div className="flex justify-between items-center">
-                <div className="flex flex-col items-center">
-                  <span className="text-3xl font-bold text-primaryAlt">{game.home || "Test Home"}</span>
-                  <br/>
-                  <div className="flex justify-between items-center">
-                    <span className="text-3xl font-extrabold text-primaryAlt">{game.homeScore || 0}</span>
-                    <button 
-                      className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
-                      onClick={() => updateScore("home")} 
-                      style={{
-                        marginLeft: "10px", 
-                        marginRight: "0px", 
-                        padding: "4px 10px", 
-                        borderRadius: "8px", 
-                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                        fontWeight: "bold", 
-                        cursor: "pointer"
-                      }}
-                    >+1</button>
+            <ControlBar />
+
+            {game ? (
+              <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surface flex flex-col gap-4">
+                <h2 className="text-4xl font-bold text-primary">{game.name || "Home vs. Away | Soccor - Male"}</h2>
+                <h2 className="text-xl font-bold text-secondary">{game.description || "Test Description"}</h2>
+                <hr className="border-gray-700" />
+                <div className="flex justify-between items-center">
+                  <div className="flex flex-col items-center">
+                    <span className="text-3xl font-bold text-primaryAlt">{game.home || "Test Home"}</span>
+                    <br />
+                    <div className="flex justify-between items-center">
+                      <span className="text-3xl font-extrabold text-primaryAlt">{game.homeScore || 0}</span>
+                      <button
+                        className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
+                        onClick={() => updateScore("home")}
+                        style={{
+                          marginLeft: "10px",
+                          marginRight: "0px",
+                          padding: "4px 10px",
+                          borderRadius: "8px",
+                          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                          fontWeight: "bold",
+                          cursor: "pointer"
+                        }}
+                      >+1</button>
+                    </div>
+                  </div>
+                  <span className="text-3xl font-bold">vs</span>
+                  <div className="flex flex-col items-center">
+                    <span className="text-3xl font-bold text-primaryAlt">{game.away || "Test Away"}</span>
+                    <br />
+                    <div className="flex justify-between items-center">
+                      <span className="text-3xl font-extrabold text-primaryAlt">{game.awayScore || 0}</span>
+                      <button
+                        className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
+                        onClick={() => updateScore("away")}
+                        style={{
+                          marginLeft: "10px",
+                          marginRight: "0px",
+                          padding: "4px 10px",
+                          borderRadius: "8px",
+                          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                          fontWeight: "bold",
+                          cursor: "pointer"
+                        }}
+                      >+1</button>
+                    </div>
                   </div>
                 </div>
-                <span className="text-3xl font-bold">vs</span>
-                <div className="flex flex-col items-center">
-            <span className="text-3xl font-bold text-primaryAlt">{game.away || "Test Away"}</span>
-            <br/>
-            <div className="flex justify-between items-center">
-              <span className="text-3xl font-extrabold text-primaryAlt">{game.awayScore || 0}</span>
-              <button 
-                className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
-                onClick={() => updateScore("away")} 
-                style={{
-                  marginLeft: "10px", 
-                  marginRight: "0px", 
-                  padding: "4px 10px", 
-                  borderRadius: "8px", 
-                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                  fontWeight: "bold", 
-                  cursor: "pointer"
-                }}
-              >+1</button>
-            </div>
-                </div>
               </div>
-            </div>
-          ): 
-          <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surfaceAlt flex flex-col gap-4">
+            ) :
+              <div className="w-full max-w-5xl mx-auto mt-4 p-4 rounded-lg border border-gray-700 bg-surfaceAlt flex flex-col gap-4">
 
-            <div className="flex gap-4">
-              <select
-                value={sport}
-                onChange={(e) => setSport(e.target.value)}
-                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
-              >
-                <option value="">Select Sport</option>
-                {SPORTS.map((s) => (
-            <option key={s} value={s}>{s}</option>
-                ))}
-              </select>
+                <div className="flex gap-4">
+                  <select
+                    value={sport}
+                    onChange={(e) => setSport(e.target.value)}
+                    className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
+                  >
+                    <option value="">Select Sport</option>
+                    {SPORTS.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
 
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
-              >
-                <option value="">Select Category</option>
-                {CATEGORIES.map((c) => (
-            <option key={c} value={c}>{c}</option>
-                ))}
-              </select>
-            </div>
+                  <select
+                    value={category}
+                    onChange={(e) => setCategory(e.target.value)}
+                    className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
+                  >
+                    <option value="">Select Category</option>
+                    {CATEGORIES.map((c) => (
+                      <option key={c} value={c}>{c}</option>
+                    ))}
+                  </select>
+                </div>
 
-            <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-2 gap-6">
 
-              {/* TEAM 1 */}
-            <div className="flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="Home Team Name"
-                value={team1}
-                onChange={(e) => setTeam1(e.target.value)}
-                style={{width:"100%"}}
-                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
-              />
-            </div>
+                  {/* TEAM 1 */}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="text"
+                      placeholder="Home Team Name"
+                      value={team1}
+                      onChange={(e) => setTeam1(e.target.value)}
+                      style={{ width: "100%" }}
+                      className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
+                    />
+                  </div>
 
-            {/* TEAM 2 */}
-            <div className="flex flex-col gap-2">
-              <input
-                type="text"
-                placeholder="Away Team Name"
-                value={team2}
-                style={{width:"100%"}}
-                onChange={(e) => setTeam2(e.target.value)}
-                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
-              />
+                  {/* TEAM 2 */}
+                  <div className="flex flex-col gap-2">
+                    <input
+                      type="text"
+                      placeholder="Away Team Name"
+                      value={team2}
+                      style={{ width: "100%" }}
+                      onChange={(e) => setTeam2(e.target.value)}
+                      className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2 col-span-2">
+                    <input
+                      type="text"
+                      placeholder="Game Description"
+                      value={description}
+                      style={{ width: "100%" }}
+                      onChange={(e) => setDescription(e.target.value)}
+                      className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
+                    />
+                  </div>
+                  <div className="flex col-span-2 justify-center items-end">
+                    <button
+                      className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
+                      style={{
+                        marginLeft: "10px",
+                        marginRight: "10px",
+                        padding: "4px 10px",
+                        borderRadius: "8px",
+                        boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+                        fontWeight: "bold",
+                        cursor: "pointer"
+                      }}
+                      onClick={handleCreateChannel}
+                      disabled={isCreating}
+                    > {isCreating ? "Creating..." : "Create Game!"}</button>
+                  </div>
+                </div>
+              </div>}
+          </div> {/* End Left Col */}
+
+          {/* RIGHT SIDE: Chat */}
+          {game && (
+            <div className="w-80 bg-white border-l h-full flex flex-col">
+              <Chat channelId={channelArn || game?.ivsChannelArn} />
             </div>
-            <div className="flex flex-col gap-2 col-span-2">
-              <input
-                type="text"
-                placeholder="Game Description"
-                value={description}
-                style={{width:"100%"}}
-                onChange={(e) => setDescription(e.target.value)}
-                className="p-2 rounded text-black w-1/2 border border-gray-400 bg-surface text-primary"
-              />
-            </div>
-            <div className="flex col-span-2 justify-center items-end">
-              <button 
-                className="bg-positive border border-gray-300 rounded px-3 py-1 hover:bg-positiveAlt transition"
-                style={{
-                  marginLeft: "10px", 
-                  marginRight: "10px", 
-                  padding: "4px 10px", 
-                  borderRadius: "8px", 
-                  boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", 
-                  fontWeight: "bold", 
-                  cursor: "pointer"
-                }}
-              onClick={handleCreateChannel}
-              disabled={isCreating}
-            > { isCreating ? "Creating..." : "Create Game!"}</button>
-            </div>
-          </div>
-        </div>}
+          )}
+        </div> {/* End Split View */}
 
         {enableCanvasCamera && (
           <CameraCanvas

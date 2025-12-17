@@ -38,8 +38,15 @@ export default function Chat({ channelId }) {
                 } else {
                     // Only add new messages
                     if (data.messages.length > 0) {
-                        setMessages(prev => [...prev, ...data.messages]);
-                        lastMessageIdRef.current = data.messages[data.messages.length - 1].id;
+                        setMessages(prev => {
+                            const existingIds = new Set(prev.map(m => m.id));
+                            const uniqueNewMessages = data.messages.filter(m => !existingIds.has(m.id));
+                            if (uniqueNewMessages.length === 0) return prev;
+                            const newMessages = [...prev, ...uniqueNewMessages];
+                            // Update ref to the very last message in the new list
+                            lastMessageIdRef.current = newMessages[newMessages.length - 1].id;
+                            return newMessages;
+                        });
                     }
                 }
                 scrollToBottom();
@@ -51,7 +58,7 @@ export default function Chat({ channelId }) {
 
     const sendMessage = async (e) => {
         e.preventDefault();
-        
+
         if (!newMessage.trim() || !user || sending) return;
 
         const messageText = newMessage.trim();
@@ -125,7 +132,7 @@ export default function Chat({ channelId }) {
 
         if (diffMins < 1) return 'just now';
         if (diffMins < 60) return `${diffMins}m ago`;
-        
+
         const hours = date.getHours();
         const minutes = date.getMinutes();
         const ampm = hours >= 12 ? 'PM' : 'AM';

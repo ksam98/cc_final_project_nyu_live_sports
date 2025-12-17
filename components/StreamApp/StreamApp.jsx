@@ -81,7 +81,7 @@ export default function StreamApp() {
         const data = await res.json();
         setGame(data);
         ws = new WebSocket(`wss://ca6gjrueld.execute-api.us-east-1.amazonaws.com/production?gameId=${data.gameId}`);
-        
+
         ws.onopen = () => {
           console.log('WebSocket connected for live scores');
         }
@@ -111,8 +111,8 @@ export default function StreamApp() {
     }
 
     fetchChannels();
-    return () => { 
-      cancelled = true; 
+    return () => {
+      cancelled = true;
       if (ws) ws.close();
     };
   }, [router.isReady]);
@@ -203,11 +203,10 @@ export default function StreamApp() {
                     <button
                       key={tab.id}
                       onClick={() => setActiveTab(tab.id)}
-                      className={`pb-2 font-medium ${
-                        activeTab === tab.id
+                      className={`pb-2 font-medium ${activeTab === tab.id
                           ? 'border-b-2 border-nyu-primary-600 text-nyu-primary-600'
                           : 'text-nyu-neutral-500'
-                      }`}
+                        }`}
                     >
                       {tab.label}
                     </button>
@@ -278,7 +277,7 @@ export default function StreamApp() {
 
         {/* RIGHT CHAT */}
         <div className="w-80 bg-white border-l flex flex-col">
-          <Chat channelId={selectedChannel?.id} />
+          <Chat channelId={selectedChannel?.arn} />
         </div>
       </div>
     </div>
