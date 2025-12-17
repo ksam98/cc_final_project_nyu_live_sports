@@ -25,6 +25,13 @@ export default async function handler(req, res) {
         return res.status(405).json({ message: 'Method not allowed' });
     }
 
+    console.log("DEBUG INVOKED: getChannels.js");
+    console.log("DEBUG Config:", {
+        region: awsConfig.region,
+        accessKeyId_Prefix: awsConfig.credentials.accessKeyId ? awsConfig.credentials.accessKeyId.substring(0, 4) + "***" : "UNDEFINED",
+        secret_Set: !!awsConfig.credentials.secretAccessKey
+    });
+
     try {
         const ddbClient = new DynamoDBClient(awsConfig);
         const docClient = DynamoDBDocumentClient.from(ddbClient);

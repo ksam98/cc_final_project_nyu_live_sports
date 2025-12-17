@@ -4,6 +4,13 @@ import { DynamoDBDocumentClient, PutCommand } from "@aws-sdk/lib-dynamodb";
 import { awsConfig } from "./aws-config";
 
 export default async function handler(req, res) {
+    console.log("DEBUG INVOKED: createChannel.js");
+    console.log("DEBUG Config:", {
+        region: awsConfig.region,
+        accessKeyId_Prefix: awsConfig.credentials.accessKeyId ? awsConfig.credentials.accessKeyId.substring(0, 4) + "***" : "UNDEFINED",
+        secret_Set: !!awsConfig.credentials.secretAccessKey
+    });
+
     if (req.method !== 'POST') {
         return res.status(405).json({ message: 'Method not allowed' });
     }
