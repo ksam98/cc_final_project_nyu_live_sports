@@ -6,11 +6,11 @@ import { useAuth } from '@/providers/AuthContext';
 import Link from 'next/link';
 import Button from '@/components/Button';
 import Spinner from '@/components/Spinner';
-import DashboardTabs from '@/components/dashboard/DashboardTabs';
-import StreamCard from '@/components/dashboard/StreamCard';
-import CategoryCard from '@/components/dashboard/CategoryCard';
-import ScheduleRow from '@/components/dashboard/ScheduleRow';
-import AddScheduleModal from '@/components/dashboard/AddScheduleModal';
+import DashboardTabs from '@/components/Dashboard/DashboardTabs';
+import StreamCard from '@/components/Dashboard/StreamCard';
+import CategoryCard from '@/components/Dashboard/CategoryCard';
+import ScheduleRow from '@/components/Dashboard/ScheduleRow';
+import AddScheduleModal from '@/components/Dashboard/AddScheduleModal';
 
 
 function SkeletonCard() {
@@ -44,7 +44,7 @@ export default function Dashboard() {
   const sports = ['Basketball', 'Throwball', 'Volleyball', 'Swimming', 'Running'];
   const { isAuthenticated, loading: authLoading, user, logout, isViewer, isAdmin } = useAuth();
   const router = useRouter();
-  
+
   const didFetch = useRef(false);
   // guard concurrent fetches
   const fetchInProgress = useRef(false);
@@ -58,7 +58,7 @@ export default function Dashboard() {
 
     // cancel previous if any
     if (abortControllerRef.current) {
-      try { abortControllerRef.current.abort(); } catch (e) {}
+      try { abortControllerRef.current.abort(); } catch (e) { }
     }
     const ac = new AbortController();
     abortControllerRef.current = ac;
@@ -111,7 +111,7 @@ export default function Dashboard() {
     }
 
     // viewers + admins stay on dashboard
-    
+
 
     if (router.pathname === '/dashboard' && !didFetch.current) {
       didFetch.current = true;
@@ -125,7 +125,7 @@ export default function Dashboard() {
   useEffect(() => {
     return () => {
       if (abortControllerRef.current) {
-        try { abortControllerRef.current.abort(); } catch (e) {}
+        try { abortControllerRef.current.abort(); } catch (e) { }
       }
     };
   }, []);
@@ -146,7 +146,7 @@ export default function Dashboard() {
               <div className="text-white text-center">
                 <div className="mb-2">
                   <svg className="w-16 h-16 mx-auto opacity-75" fill="currentColor" viewBox="0 0 20 20" aria-hidden>
-                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd"/>
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clipRule="evenodd" />
                   </svg>
                 </div>
                 <p className="text-sm font-medium">Live Stream</p>
@@ -228,36 +228,36 @@ export default function Dashboard() {
 
           {activeTab === 'Live' && (
 
-              <div className="space-y-6">
-                {/* Intro text */}
-                <p className="text-nyu-neutral-600">
-                  Select a stream to start watching
-                </p>
+            <div className="space-y-6">
+              {/* Intro text */}
+              <p className="text-nyu-neutral-600">
+                Select a stream to start watching
+              </p>
 
-                {/* Error */}
-                {error && (
-                  <div className="p-4 rounded-lg bg-red-50 border border-red-200">
-                    <p className="text-sm text-red-600">{error}</p>
-                  </div>
-                )}
+              {/* Error */}
+              {error && (
+                <div className="p-4 rounded-lg bg-red-50 border border-red-200">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
 
-                {/* Empty state */}
-                {channels.length === 0 ? (
-                  <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-nyu-neutral-300">
-                    <p className="text-lg text-nyu-neutral-600 mb-2">
-                      No live streams available
-                    </p>
-                    <p className="text-sm text-nyu-neutral-400">
-                      Check back later for live sports events
-                    </p>
-                  </div>
-                ) : (
-                  /* Cards grid */
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {channelCards}
-                  </div>
-                )}
-              </div>
+              {/* Empty state */}
+              {channels.length === 0 ? (
+                <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-nyu-neutral-300">
+                  <p className="text-lg text-nyu-neutral-600 mb-2">
+                    No live streams available
+                  </p>
+                  <p className="text-sm text-nyu-neutral-400">
+                    Check back later for live sports events
+                  </p>
+                </div>
+              ) : (
+                /* Cards grid */
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {channelCards}
+                </div>
+              )}
+            </div>
 
           )}
 
@@ -318,7 +318,7 @@ export default function Dashboard() {
               </div>
             </div>
           )}
-          
+
           {activeTab === 'Favorites' && (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
               {favorites.map((sport) => (
