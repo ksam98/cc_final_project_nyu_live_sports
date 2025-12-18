@@ -9,14 +9,11 @@ export default function StreamApp() {
   const router = useRouter();
   const { id } = router.query;
 
-  const [channels, setChannels] = useState([]);
   const [selectedChannel, setSelectedChannel] = useState(null);
-  const [selectedEndedChannel, setSelectedEndedChannel] = useState(null);
   const [loading, setLoading] = useState(true);
   const [game, setGame] = useState(null);
   const [socket, setSocket] = useState(null);
   const [activeTab, setActiveTab] = useState('stats');
-
   // 🔹 Example metadata (later comes from DB)
   const sport = 'Basketball';
   const category = 'Men';
@@ -59,23 +56,25 @@ export default function StreamApp() {
 
         if (!data.success || cancelled) return;
 
-        setChannels(data.channels);
-
-        if (!selectedChannel && data.channels.length > 0) {
-          const found = id
-            ? data.channels.find(c => c.id === id)
-            : data.channels[0];
-          setSelectedChannel(found || data.channels[0]);
-          const channelArn = found ? found.arn : data.channels[0].arn;
-          await fetchGameAndConnect(channelArn);
+        let allChannels = data.channels || [];
+        allChannels = allChannels.concat(data.endedChannels || []);
+        
+        const found = id ?
+          allChannels.find(c => c.id === id)
+          : null;
+        
+        if (allChannels.length === 0 || found === null || found === undefined) {
+          router.replace('/dashboard');
+          return;
         }
-        else if(!selectedEndedChannel && data.endedChannels.length > 0) {
-          const foundEnded = id
-            ? data.endedChannels.find(c => c.id === id)
-            : data.endedChannels[0];
-          setSelectedEndedChannel(foundEnded || data.endedChannels[0]);
-          const endedChannelArn = foundEnded ? foundEnded.arn : data.endedChannels[0]?.arn;
-          await fetchGame(endedChannelArn);
+
+        setSelectedChannel(found);
+        const channelArn = found.arn;
+
+        if (found.isLive) {
+          await fetchGameAndConnect(channelArn);
+        } else {
+          await fetchGame(channelArn);
         }
       } catch (err) {
         console.error('Error fetching channels:', err);
@@ -314,7 +313,7 @@ export default function StreamApp() {
         </div>
       </div>
     );
-  }else if(selectedEndedChannel && !selectedEndedChannel.isLive) {
+  }else if(selectedChannel && !selectedChannel.isLive) {
     return (
       <div className="flex flex-col h-screen bg-nyu-neutral-100">
         {/* Header */}
@@ -334,7 +333,7 @@ export default function StreamApp() {
               }}>← Back to Dashboard</button>
             </Link>
             <h1 className="text-xl font-bold text-nyu-primary-600">
-              {selectedEndedChannel.broadcastName}
+              {selectedChannel.broadcastName}
             </h1>
             <div className="w-32" />
           </div>
@@ -346,7 +345,7 @@ export default function StreamApp() {
                         {/* Video */}
             <div className="bg-black p-4 flex justify-center">
               <div className="w-full max-w-5xl aspect-video rounded-lg overflow-hidden">
-                <Player playbackUrl={selectedEndedChannel.playbackUrl} />
+                <Player playbackUrl={selectedChannel.playbackUrl} />
               </div>
             </div>
 
