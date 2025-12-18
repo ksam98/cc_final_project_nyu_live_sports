@@ -69,7 +69,7 @@ export default function StreamApp() {
           const channelArn = found ? found.arn : data.channels[0].arn;
           await fetchGameAndConnect(channelArn);
         }
-        if(!selectedEndedChannel && data.endedChannels.length > 0) {
+        else if(!selectedEndedChannel && data.endedChannels.length > 0) {
           const foundEnded = id
             ? data.endedChannels.find(c => c.id === id)
             : data.endedChannels[0];
